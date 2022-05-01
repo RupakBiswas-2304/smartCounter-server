@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from .models import *
 import hashlib
 import uuid
+import json
+import ast
 # Create your views here.
 class Index(APIView):
     def get(self, request):
@@ -22,9 +24,12 @@ class Count(APIView):
     def post(self, request):
         id = request.headers['id']
         device = Device.objects.filter(mac_id = id)
+        j_data = json.loads((request.body).decode('utf-8'))
+        print(request.body,j_data)
         if (device):
-            count_in = int(request.data['count_in'])
-            count_out = int(request.data['count_out'])
+            print("ok")
+            count_in = int(j_data['count_in'])
+            count_out = int(j_data['count_out'])
 
             device[0].room.total_in += count_in
             device[0].room.total_out += count_out
@@ -72,19 +77,21 @@ class Login(APIView):
 class Rooms(APIView):
     def post(self,request):
         authtoken = request.headers['authtoken']
-        house = House.objects.filter(authtoken=authtoken)
+        house = House.objects.get(authtoken=authtoken)
         try :
             name = request.data['name']
+            limit = request.data['limit']
             try :
                 room = Room.objects.create(
                 name=name,
-                house=house[0],
+                house=house,
                 total_device=0,
                 total_in=0,
                 total_out=0,
-                present_in=0)
-                house[0].total_room += 1
-                house[0].save()
+                present_in=0,
+                limit = limit)
+                house.total_room += 1
+                house.save()
                 return Response({'message':'Successfully created room'},200)
             except Exception as e :
                 print(e)
@@ -106,23 +113,27 @@ class Rooms(APIView):
 class Devices(APIView):
     def post(self, request):
         authtoken = request.headers['authtoken']
-        house = House.objects.filter(authtoken=authtoken)
+        house = House.objects.get(authtoken=authtoken)
+        
         try :
             mac_id = request.data['mac-id']
             room_id = request.data['room-id']
             try :
-                roomx = Room.objects.filter(id=room_id)
+                roomx = Room.objects.get(id=room_id)
+                # housex = House.objects.get(authtoken=authtoken)
                 device = Device.objects.create(
-                room = roomx[0],
+                room = roomx,
                 mac_id = mac_id,
-                house = house[0],
+                house = house,
                 post_url = "null",
                 get_url = "null",
                 )
-                house[0].total_device += 1
-                house[0].save()
-                roomx[0].total_device += 1
-                roomx[0].save()
+                # print(house.total_device,roomx.total_device)
+                roomx.total_device += 1
+                roomx.save()
+                house.total_device += 1
+                house.save()
+                
                 return Response({'message':'Successfully created device'},200)
             except Exception as e :
                 print(e)

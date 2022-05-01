@@ -22,7 +22,7 @@ class Room(models.Model):
     total_in = models.IntegerField(default= 0)
     total_out = models.IntegerField(default= 0)
     present_in = models.IntegerField(default= 0)
-
+    limit = models.IntegerField(default=1)
     def __str__(self):
         return str(self.name)
 
@@ -31,8 +31,6 @@ class Device(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     house = models.ForeignKey(House, on_delete=models.CASCADE, null = True)
     mac_id = models.CharField(max_length=100, unique= True)
-    post_url = models.CharField(max_length=300)
-    get_url = models.CharField(max_length=300)
 
     def __str__(self):
         return self.mac_id
